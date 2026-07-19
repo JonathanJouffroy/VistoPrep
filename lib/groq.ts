@@ -66,6 +66,7 @@ export interface GeneratedFeedback {
   clarte: string;
   structure: string;
   pointsACreuser: string;
+  exempleReponse: string;
 }
 
 /**
@@ -83,12 +84,13 @@ Règles :
 - Sois concret : chaque axe doit s'appuyer sur ce qui a été effectivement dit, pas des généralités.
 - Reste constructif sans être complaisant : si la réponse est faible, dis-le clairement mais avec des pistes d'amélioration concrètes.
 - Réponds UNIQUEMENT avec un objet JSON valide, sans texte avant ou après, au format :
-{"clarte": "...", "structure": "...", "pointsACreuser": "..."}
+{"clarte": "...", "structure": "...", "pointsACreuser": "...", "exempleReponse": "..."}
 
-Les trois axes :
+Les axes :
 - clarte : le propos est-il compréhensible, direct, sans détour inutile ?
 - structure : la réponse a-t-elle une progression logique (ex. situation → action → résultat) ?
-- pointsACreuser : ce qui manque ou mériterait d'être creusé pour une réponse plus convaincante.`;
+- pointsACreuser : ce qui manque ou mériterait d'être creusé pour une réponse plus convaincante.
+- exempleReponse : un exemple concret de réponse solide à cette question précise, dans le même contexte que celui de l'utilisateur (même métier, même situation). Ce n'est pas un corrigé unique à réciter, mais une illustration de ce à quoi peut ressembler une bonne réponse — 3 à 5 phrases, rédigée à la première personne.`;
 
   const completion = await getGroqClient().chat.completions.create({
     model: QUESTION_MODEL,
@@ -108,6 +110,7 @@ Les trois axes :
     clarte: parsed.clarte ?? "",
     structure: parsed.structure ?? "",
     pointsACreuser: parsed.pointsACreuser ?? "",
+    exempleReponse: parsed.exempleReponse ?? "",
   };
 }
 

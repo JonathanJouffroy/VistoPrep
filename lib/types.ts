@@ -34,6 +34,7 @@ export interface Feedback {
   clarte: string;
   structure: string;
   pointsACreuser: string;
+  exempleReponse: string;
 }
 
 export const THEME_LABELS: Record<Theme, string> = {
