@@ -1,10 +1,24 @@
 import Groq from "groq-sdk";
 import { SessionType, Theme } from "./types";
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-
 const QUESTION_MODEL = "llama-3.3-70b-versatile";
 const TRANSCRIPTION_MODEL = "whisper-large-v3-turbo";
+
+// Instancié à la demande plutôt qu'au chargement du module : sinon, le
+// build Next.js plante dès que GROQ_API_KEY n'est pas encore définie dans
+// l'environnement (ex. avant configuration sur Vercel).
+let _groq: Groq | null = null;
+function getGroqClient(): Groq {
+  if (!_groq) {
+    if (!process.env.GROQ_API_KEY) {
+      throw new Error(
+        "GROQ_API_KEY n'est pas définie. Ajoute-la dans les variables d'environnement du projet."
+      );
+    }
+    _groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  }
+  return _groq;
+}
 
 export interface GeneratedQuestion {
   contenu: string;
@@ -35,7 +49,7 @@ Règles :
 - Réponds UNIQUEMENT avec un tableau JSON valide, sans texte avant ou après, au format :
 [{"contenu": "...", "theme": "technique"}, ...]`;
 
-  const completion = await groq.chat.completions.create({
+  const completion = await getGroqClient().chat.completions.create({
     model: QUESTION_MODEL,
     messages: [
       { role: "system", content: systemPrompt },
@@ -76,7 +90,7 @@ Les trois axes :
 - structure : la réponse a-t-elle une progression logique (ex. situation → action → résultat) ?
 - pointsACreuser : ce qui manque ou mériterait d'être creusé pour une réponse plus convaincante.`;
 
-  const completion = await groq.chat.completions.create({
+  const completion = await getGroqClient().chat.completions.create({
     model: QUESTION_MODEL,
     messages: [
       { role: "system", content: systemPrompt },
@@ -101,7 +115,7 @@ Les trois axes :
  * Transcrit un enregistrement audio (réponse orale) via l'API Whisper de Groq.
  */
 export async function transcribeAudio(file: File): Promise<string> {
-  const transcription = await groq.audio.transcriptions.create({
+  const transcription = await getGroqClient().audio.transcriptions.create({
     file,
     model: TRANSCRIPTION_MODEL,
     language: "fr",
