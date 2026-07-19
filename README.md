@@ -25,7 +25,9 @@ Ce qui fonctionne de bout en bout :
 - Création d'une session à partir d'un contexte collé (offre, sujet, description libre)
 - Génération de 8 à 12 questions classées par thème via Groq
 - Réponse écrite ou orale (enregistrement micro + transcription Whisper)
-- Retour structuré par question sur 3 axes, sans note globale
+- Retour structuré par question sur 3 axes, avec un exemple de réponse solide, sans note globale
+- Avis global une fois la session terminée (points forts, points de vigilance, conseil pour le jour J)
+- Analyse de CV (section à part) : import PDF ou texte, conseil de présentation orale par expérience, en lien avec le contexte de la session
 - Historique des sessions (persistant en local dans le navigateur)
 
 Ce qui reste à brancher pour la mise en prod :
