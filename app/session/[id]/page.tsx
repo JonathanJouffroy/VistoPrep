@@ -14,7 +14,9 @@ import {
   getFeedback,
   getSessionReview,
   saveSessionReview,
+  getCVAnalysis,
 } from "@/lib/store";
+import Link from "next/link";
 import { Question, Reponse, Session, SessionReview, SESSION_TYPE_LABELS } from "@/lib/types";
 
 export default function SessionPage({ params }: { params: { id: string } }) {
@@ -25,6 +27,7 @@ export default function SessionPage({ params }: { params: { id: string } }) {
   const [review, setReview] = useState<SessionReview | null>(null);
   const [generatingReview, setGeneratingReview] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
+  const [hasCVAnalysis, setHasCVAnalysis] = useState(false);
 
   useEffect(() => {
     const s = getSession(params.id);
@@ -48,6 +51,7 @@ export default function SessionPage({ params }: { params: { id: string } }) {
     });
     setStatuses(computed);
     setReview(getSessionReview(params.id) ?? null);
+    setHasCVAnalysis(!!getCVAnalysis(params.id));
   }, [params.id]);
 
   if (session === null) notFound();
@@ -98,6 +102,23 @@ export default function SessionPage({ params }: { params: { id: string } }) {
         <h1 className="mt-1 font-display text-2xl font-semibold tracking-tight text-blue-deep">
           Tes questions
         </h1>
+
+        <Link
+          href={`/session/${session.id}/cv`}
+          className="mt-6 flex items-center justify-between rounded-card border border-structural2 bg-white p-4 shadow-card transition hover:border-blue-soft"
+        >
+          <div>
+            <span className="font-display text-sm font-semibold text-blue-deep">
+              Analyse de CV
+            </span>
+            <p className="mt-1 text-sm text-ink/70">
+              Comment présenter chaque expérience à l&apos;oral
+            </p>
+          </div>
+          <span className="font-mono text-[11px] uppercase tracking-wide text-blue-soft">
+            {hasCVAnalysis ? "Consulter" : "À faire"}
+          </span>
+        </Link>
 
         {statuses.length > 0 && (
           <div className="mt-6">
