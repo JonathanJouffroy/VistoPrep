@@ -37,6 +37,14 @@ export interface Feedback {
   exempleReponse: string;
 }
 
+export interface SessionReview {
+  id: string;
+  sessionId: string;
+  pointsForts: string;
+  pointsVigilance: string;
+  conseilJourJ: string;
+}
+
 export const THEME_LABELS: Record<Theme, string> = {
   technique: "Technique",
   comportemental: "Comportemental",
