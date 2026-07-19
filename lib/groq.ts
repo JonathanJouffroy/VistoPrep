@@ -187,6 +187,70 @@ Les axes :
   };
 }
 
+export interface GeneratedCVExperience {
+  titre: string;
+  conseil: string;
+}
+
+export interface GeneratedCVAnalysis {
+  syntheseGlobale: string;
+  pointsForts: string;
+  experiences: GeneratedCVExperience[];
+}
+
+/**
+ * Analyse un CV en le mettant en regard du contexte de la session (offre,
+ * sujet…), et donne un conseil de présentation orale pour chaque expérience
+ * identifiée. Section volontairement distincte du feedback par question.
+ */
+export async function generateCVAnalysis(
+  type: SessionType,
+  contexte: string,
+  cvTexte: string
+): Promise<GeneratedCVAnalysis> {
+  const typeLabel =
+    type === "entretien"
+      ? "un entretien d'embauche"
+      : type === "soutenance"
+      ? "une soutenance de mémoire ou de thèse"
+      : "un oral d'école ou de concours";
+
+  const systemPrompt = `Tu es un coach de préparation aux oraux. On te donne le contexte d'une préparation pour ${typeLabel}, ainsi que le CV de la personne. Ton rôle est d'aider à présenter ce CV à l'oral, pas de le réécrire.
+
+Règles :
+- Identifie les expériences clés du CV (postes, stages, projets significatifs, formations pertinentes) — entre 3 et 6 en général.
+- Pour chaque expérience, donne un conseil concret sur comment la présenter à l'oral en lien avec le contexte fourni : quoi mettre en avant, quel angle prendre, quel résultat concret citer si le CV en donne un.
+- Ne réécris pas le CV, ne liste pas juste ce qu'il contient : donne un vrai conseil de présentation orale.
+- Reste constructif et concret, jamais vague ("mets en avant tes compétences" n'est pas un conseil utile).
+- Réponds UNIQUEMENT avec un objet JSON valide, sans texte avant ou après, au format :
+{"syntheseGlobale": "...", "pointsForts": "...", "experiences": [{"titre": "...", "conseil": "..."}]}
+
+Les champs :
+- syntheseGlobale : en 2-3 phrases, comment ce profil se positionne par rapport au contexte fourni.
+- pointsForts : ce qui ressort comme le plus solide dans ce CV pour ce contexte précis.
+- experiences : la liste des expériences avec leur conseil de présentation.`;
+
+  const completion = await getGroqClient().chat.completions.create({
+    model: QUESTION_MODEL,
+    messages: [
+      { role: "system", content: systemPrompt },
+      {
+        role: "user",
+        content: `Contexte de la préparation :\n${contexte}\n\nCV :\n${cvTexte}`,
+      },
+    ],
+    temperature: 0.4,
+  });
+
+  const raw = completion.choices[0]?.message?.content ?? "{}";
+  const parsed = parseJsonObject<GeneratedCVAnalysis>(raw);
+  return {
+    syntheseGlobale: parsed.syntheseGlobale ?? "",
+    pointsForts: parsed.pointsForts ?? "",
+    experiences: Array.isArray(parsed.experiences) ? parsed.experiences : [],
+  };
+}
+
 function parseJsonArray<T>(raw: string): T[] {
   const cleaned = stripCodeFence(raw);
   try {

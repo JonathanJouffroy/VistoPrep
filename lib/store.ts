@@ -1,6 +1,6 @@
 "use client";
 
-import { Session, Question, Reponse, Feedback, SessionReview } from "./types";
+import { Session, Question, Reponse, Feedback, SessionReview, CVAnalysis } from "./types";
 
 /**
  * Couche d'accès aux données.
@@ -20,6 +20,7 @@ const KEYS = {
   reponses: "vistoprep:reponses",
   feedbacks: "vistoprep:feedbacks",
   reviews: "vistoprep:reviews",
+  cvAnalyses: "vistoprep:cv-analyses",
 };
 
 function read<T>(key: string): T[] {
@@ -170,4 +171,26 @@ export function saveSessionReview(
   }
   write(KEYS.reviews, all);
   return review;
+}
+
+// --- Analyse de CV ---
+
+export function getCVAnalysis(sessionId: string): CVAnalysis | undefined {
+  return read<CVAnalysis>(KEYS.cvAnalyses).find((c) => c.sessionId === sessionId);
+}
+
+export function saveCVAnalysis(
+  sessionId: string,
+  data: Omit<CVAnalysis, "id" | "sessionId">
+): CVAnalysis {
+  const all = read<CVAnalysis>(KEYS.cvAnalyses);
+  const existingIdx = all.findIndex((c) => c.sessionId === sessionId);
+  const analysis: CVAnalysis = { id: uid(), sessionId, ...data };
+  if (existingIdx >= 0) {
+    all[existingIdx] = analysis;
+  } else {
+    all.push(analysis);
+  }
+  write(KEYS.cvAnalyses, all);
+  return analysis;
 }

@@ -45,6 +45,19 @@ export interface SessionReview {
   conseilJourJ: string;
 }
 
+export interface CVExperience {
+  titre: string;
+  conseil: string;
+}
+
+export interface CVAnalysis {
+  id: string;
+  sessionId: string;
+  syntheseGlobale: string;
+  pointsForts: string;
+  experiences: CVExperience[];
+}
+
 export const THEME_LABELS: Record<Theme, string> = {
   technique: "Technique",
   comportemental: "Comportemental",
