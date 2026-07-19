@@ -1,6 +1,6 @@
 "use client";
 
-import { Session, Question, Reponse, Feedback } from "./types";
+import { Session, Question, Reponse, Feedback, SessionReview } from "./types";
 
 /**
  * Couche d'accès aux données.
@@ -19,6 +19,7 @@ const KEYS = {
   questions: "vistoprep:questions",
   reponses: "vistoprep:reponses",
   feedbacks: "vistoprep:feedbacks",
+  reviews: "vistoprep:reviews",
 };
 
 function read<T>(key: string): T[] {
@@ -147,4 +148,26 @@ export function saveFeedback(
   }
   write(KEYS.feedbacks, all);
   return feedback;
+}
+
+// --- Avis global de session ---
+
+export function getSessionReview(sessionId: string): SessionReview | undefined {
+  return read<SessionReview>(KEYS.reviews).find((r) => r.sessionId === sessionId);
+}
+
+export function saveSessionReview(
+  sessionId: string,
+  data: Omit<SessionReview, "id" | "sessionId">
+): SessionReview {
+  const all = read<SessionReview>(KEYS.reviews);
+  const existingIdx = all.findIndex((r) => r.sessionId === sessionId);
+  const review: SessionReview = { id: uid(), sessionId, ...data };
+  if (existingIdx >= 0) {
+    all[existingIdx] = review;
+  } else {
+    all.push(review);
+  }
+  write(KEYS.reviews, all);
+  return review;
 }

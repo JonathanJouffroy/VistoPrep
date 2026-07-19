@@ -129,6 +129,64 @@ export async function transcribeAudio(file: File): Promise<string> {
     : (transcription as { text: string }).text;
 }
 
+export interface GeneratedSessionReview {
+  pointsForts: string;
+  pointsVigilance: string;
+  conseilJourJ: string;
+}
+
+/**
+ * Avis global sur l'ensemble d'une session, une fois toutes les questions
+ * traitées. Reste qualitatif (pas de note), et se concentre sur des
+ * tendances qui ne ressortent pas d'un feedback question par question.
+ */
+export async function generateSessionReview(
+  type: SessionType,
+  items: { question: string; reponse: string }[]
+): Promise<GeneratedSessionReview> {
+  const typeLabel =
+    type === "entretien"
+      ? "un entretien d'embauche"
+      : type === "soutenance"
+      ? "une soutenance de mémoire ou de thèse"
+      : "un oral d'école ou de concours";
+
+  const systemPrompt = `Tu es un coach de préparation aux oraux. Tu donnes un avis global sur l'ensemble d'une session d'entraînement pour ${typeLabel}, à partir de toutes les questions et réponses fournies.
+
+Règles :
+- Pas de note chiffrée, pas de verdict global du type "prêt / pas prêt". Reste qualitatif et actionnable.
+- Base-toi sur des tendances observées à travers plusieurs réponses, pas sur une seule réponse isolée.
+- Sois constructif sans être complaisant.
+- Réponds UNIQUEMENT avec un objet JSON valide, sans texte avant ou après, au format :
+{"pointsForts": "...", "pointsVigilance": "...", "conseilJourJ": "..."}
+
+Les axes :
+- pointsForts : ce qui revient comme solide à travers plusieurs réponses.
+- pointsVigilance : ce qui revient comme fragile ou à travailler à travers plusieurs réponses.
+- conseilJourJ : un conseil concret et pratique pour le jour de l'entretien/oral, en lien avec ce qui a été observé.`;
+
+  const transcript = items
+    .map((it, i) => `Question ${i + 1} : ${it.question}\nRéponse : ${it.reponse}`)
+    .join("\n\n");
+
+  const completion = await getGroqClient().chat.completions.create({
+    model: QUESTION_MODEL,
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: transcript },
+    ],
+    temperature: 0.4,
+  });
+
+  const raw = completion.choices[0]?.message?.content ?? "{}";
+  const parsed = parseJsonObject<GeneratedSessionReview>(raw);
+  return {
+    pointsForts: parsed.pointsForts ?? "",
+    pointsVigilance: parsed.pointsVigilance ?? "",
+    conseilJourJ: parsed.conseilJourJ ?? "",
+  };
+}
+
 function parseJsonArray<T>(raw: string): T[] {
   const cleaned = stripCodeFence(raw);
   try {
